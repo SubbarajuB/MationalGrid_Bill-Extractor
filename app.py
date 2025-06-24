@@ -6,7 +6,7 @@ from datetime import datetime
 from io import BytesIO
 
 st.set_page_config(page_title="National Grid Multi-PDF Extractor", layout="wide")
-st.title("\U0001F4C4 National Grid Bill Extractor for EnergyCAP")
+st.title("\U0001F4C4 National Grid Bill Extractor for EnergyCAP (Multi-PDF)")
 
 # Function to extract data from one PDF
 def extract_data_from_pdf(file):
@@ -19,12 +19,12 @@ def extract_data_from_pdf(file):
     text = re.sub(r"\s+", " ", text)
     text = text.replace("Adjustment for Changes from Normal Weather", "AdjustmentForChangesFromNormalWeather")
 
-    # Basic fields
+    # Account number
     account_match = re.search(r"ACCOUNT NUMBER\s+(\d{5}-\d{5})", text)
     account_number = account_match.group(1) if account_match else "Unknown"
     data = {"Vendor": "National Grid", "Account Number": account_number}
 
-    # Field matchers
+    # Fixed field matchers
     optional_fields = {
         "Service Address": re.search(r"SERVICE FOR\s+(.*?),?\s*ALBANY NY", text),
         "Meter Number": re.search(r"METER NUMBER\s+([A-Z0-9]+)", text),
@@ -65,7 +65,19 @@ def extract_data_from_pdf(file):
         data["Service Period Start"] = None
         data["Service Period End"] = None
 
-    # Dynamic therm charge values
+    # Therms Used
+    therms_used_match = re.search(r"Therms\s+Used\s+(\d+)", text)
+    if not therms_used_match:
+        # Fallback based on known pattern
+        structured_match = re.search(r"\d+\s+Actual\s+\d+\s+Actual\s+\d+\s+\d+\.\d+\s+\d+\s+1\.02642\s+(\d+)", text)
+        if structured_match:
+            data["Therms Used"] = structured_match.group(1)
+        else:
+            data["Therms Used"] = None
+    else:
+        data["Therms Used"] = therms_used_match.group(1)
+
+    # Dynamic Therm Charges
     therm_charge_matches = re.findall(
         r"(Next|Over/Last)\s+(\d+)\s+Therms\s+\d+\.\d+\s+x\s+\d+\s+therms\s+([\d,]+\.\d{2})",
         text,
@@ -77,7 +89,7 @@ def extract_data_from_pdf(file):
 
     return pd.DataFrame([data])
 
-# Upload multiple PDFs
+# Streamlit UI
 uploaded_files = st.file_uploader("Upload one or more National Grid bill PDFs", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
@@ -85,7 +97,7 @@ if uploaded_files:
     for file in uploaded_files:
         try:
             df = extract_data_from_pdf(file)
-            df["Filename"] = file.name  # Optional: add filename source
+            df["Filename"] = file.name
             all_dataframes.append(df)
         except Exception as e:
             st.warning(f"Could not process {file.name}: {e}")

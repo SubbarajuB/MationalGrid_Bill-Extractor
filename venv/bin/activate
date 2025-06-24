@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/madhubuddaraju/Desktop/Projects/National Grid Extracter/venv"
+VIRTUAL_ENV="/Users/madhubuddaraju/Desktop/Projects/national_grid_app/venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

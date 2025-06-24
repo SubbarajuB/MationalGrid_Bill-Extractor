@@ -6,7 +6,7 @@ from datetime import datetime
 from io import BytesIO
 
 st.set_page_config(page_title="National Grid Multi-PDF Extractor", layout="wide")
-st.title("\U0001F4C4 National Grid Bill Extractor for EnergyCAP (Multi-PDF)")
+st.title("\U0001F4C4 National Grid Bill Extractor for EnergyCAP")
 
 # Function to extract data from one PDF
 def extract_data_from_pdf(file):

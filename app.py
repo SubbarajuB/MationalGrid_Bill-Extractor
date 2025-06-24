@@ -65,17 +65,16 @@ def extract_data_from_pdf(file):
         data["Service Period Start"] = None
         data["Service Period End"] = None
 
-    # Therms Used
-    therms_used_match = re.search(r"Therms\s+Used\s+(\d+)", text)
-    if not therms_used_match:
-        # Fallback based on known pattern
-        structured_match = re.search(r"\d+\s+Actual\s+\d+\s+Actual\s+\d+\s+\d+\.\d+\s+\d+\s+1\.02642\s+(\d+)", text)
-        if structured_match:
-            data["Therms Used"] = structured_match.group(1)
-        else:
-            data["Therms Used"] = None
+    # Therms Used: capture last value after 1.XXXX pattern
+    structured_match = re.search(
+        r"Actual\s+\d+\s+Actual\s+\d+\s+\d+\s+\d+\.\d+\s+\d+\s+1\.\d+\s+(\d+)", text
+    )
+    if structured_match:
+        data["Therms Used"] = structured_match.group(1)
     else:
-        data["Therms Used"] = therms_used_match.group(1)
+        # fallback to explicit label if ever used
+        therms_used_match = re.search(r"Therms\s+Used\s+(\d+)", text)
+        data["Therms Used"] = therms_used_match.group(1) if therms_used_match else None
 
     # Dynamic Therm Charges
     therm_charge_matches = re.findall(
